@@ -1,5 +1,16 @@
 # AI 网关（Cuckoo Code 插件）
 
+> ⚠️ **重要：本插件目前仅适用于作者的 fork**
+>
+> 本插件的 AI 查询能力依赖一个主进程桥接入口 `globalThis.__cuckooRunGatewayQuery`，
+> **该入口尚未合入官方 Cuckoo Code**（含 0.8.13）。
+>
+> - ✅ 可用：`8555uuy/cuckoo-code` 的 `personal/full` 分支
+> - ❌ 不可用：官方 `wangyongpeng90/cuckoo-code`（装了也只会 503）
+>
+> 已知问题见 [Issue #1](https://github.com/8555uuy/cuckoo-plugin-ai-gateway/issues/1)。
+> 上游合并后会更新本说明。
+
 > ⚠️ **免责声明**
 >
 > 本插件为开源工具，按"原样"提供，不附带任何明示或默示的担保。
@@ -10,11 +21,13 @@
 > 2. **后果自负** —— 你应自行承担使用本插件产生的一切后果，包括但不限于密钥泄露、被他人滥用、产生额外费用、违反上游 AI 服务条款等。
 > 3. **建议** —— 仅在可信网络中使用，并**立即修改默认管理密码**。
 
-**开源地址**：https://github.com/8555uuy/cuckoo-plugin-ai-gateway
-
----
-
 把 Cuckoo 的 AI 网页版暴露成 **OpenAI 兼容 API**，让局域网设备（手机 / LobeChat / 任何支持 OpenAI 的客户端）直接调用。附管理网站（Key 管理 / 请求日志）。
+
+## 前置条件
+
+- **Cuckoo Code 必须是作者的 fork**（`8555uuy/cuckoo-code` 的 `personal/full` 分支）。
+  官方版缺少 `__cuckooRunGatewayQuery` 入口，请求会一直返回 503。
+- 需要至少一个已打开的 AI 窗口（网关会借用它执行查询）。
 
 ## 安装
 

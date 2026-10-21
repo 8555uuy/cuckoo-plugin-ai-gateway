@@ -55,7 +55,7 @@ function getLanIPs() {
 }
 
 function readConfig() {
-  const out = { port: 18900, host: '0.0.0.0', adminPassword: 'admin', requireKey: true, autoStart: true, enabled: true };
+  const out = { port: 18900, host: '127.0.0.1', adminPassword: '', requireKey: true, autoStart: true, enabled: true };
   try {
     const file = configFile();
     if (fs.existsSync(file)) {
@@ -105,7 +105,7 @@ let logs = [];
 function addLog(entry) { logs.unshift(Object.assign({ at: Date.now() }, entry)); if (logs.length > 200) logs.length = 200; }
 
 function json(res, code, obj) {
-  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': (res.req && res.req.headers && res.req.headers.origin) || 'http://127.0.0.1' });
   res.end(JSON.stringify(obj));
 }
 function html(res, code, body) {
@@ -177,7 +177,7 @@ async function handleChat(req, res, bodyText) {
         'Content-Type': 'text/event-stream; charset=utf-8',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': (res.req && res.req.headers && res.req.headers.origin) || 'http://127.0.0.1',
       });
       res.write(sseLine(streamChunk(pid, model, { role: 'assistant', content: '' }, null)));
       res.write(sseLine(streamChunk(pid, model, { content: PRANK_REPLY }, null)));
@@ -204,7 +204,7 @@ async function handleChat(req, res, bodyText) {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': (res.req && res.req.headers && res.req.headers.origin) || 'http://127.0.0.1',
     });
     res.write(sseLine(streamChunk(id, model, { role: 'assistant', content: '' }, null)));
     // 多轮（工具循环）流式：每轮文本会重置，需按轮追踪已发送内容
@@ -274,7 +274,7 @@ async function handleChat(req, res, bodyText) {
 
 // ===== 路由 =====
 async function handle(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', (req.headers.origin || 'http://127.0.0.1'));
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token');
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
@@ -328,7 +328,14 @@ async function handle(req, res) {
   if (p.startsWith('/api/')) {
     if (!authAdmin(req)) return json(res, 401, { success: false, error: '未登录' });
 
-    if (p === '/api/keys' && req.method === 'GET') return json(res, 200, { success: true, keys: keystore.loadKeys() });
+    if (p === '/api/keys' && req.method === 'GET') {
+      const list = keystore.loadKeys().map(function (k) {
+        const plain = (typeof k.__plain === 'string' && k.__plain) || '';
+        const masked = plain ? (plain.slice(0, 14) + '…') : '(已加密)';
+        return { key: k.key, masked: masked, note: k.note, createdAt: k.createdAt, enabled: k.enabled, calls: k.calls, lastUsedAt: k.lastUsedAt };
+      });
+      return json(res, 200, { success: true, keys: list });
+    }
     if (p === '/api/keys' && req.method === 'POST') {
       const body = await readBody(req); let b = {};
       try { b = JSON.parse(body || '{}'); } catch (e) {}

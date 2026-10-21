@@ -17,14 +17,14 @@
     "host": {
       "type": "string",
       "label": "绑定地址",
-      "description": "0.0.0.0 = 局域网可访问；127.0.0.1 = 仅本机",
-      "default": "0.0.0.0"
+      "description": "127.0.0.1 = 仅本机（推荐）；0.0.0.0 = 局域网可访问（有安全风险）",
+      "default": "127.0.0.1"
     },
     "adminPassword": {
       "type": "string",
       "label": "管理密码",
-      "description": "登录管理网站的密码",
-      "default": "admin"
+      "description": "管理网站登录密码；留空则首次启动自动生成随机密码并保存到插件数据目录的 admin-password.txt",
+      "default": ""
     },
     "requireKey": {
       "type": "boolean",
